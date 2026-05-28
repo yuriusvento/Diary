@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Дневник размышлений</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #fff;
+      color: #111;
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 540px;
+      width: 100%;
+      opacity: 0;
+      animation: up .7s ease .1s forwards;
+    }
+
+    .label {
+      font-size: .7rem;
+      font-weight: 400;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 300;
+      line-height: 1.15;
+      letter-spacing: -.02em;
+      margin-bottom: 1.8rem;
+    }
+
+    .divider {
+      width: 32px;
+      height: 1px;
+      background: #111;
+      margin-bottom: 1.8rem;
+    }
+
+    p {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: #555;
+      margin-bottom: 1rem;
+    }
+
+    ul {
+      list-style: none;
+      margin: 1.6rem 0 2.4rem;
+      display: grid;
+      gap: .5rem;
+    }
+
+    ul li {
+      font-size: .9rem;
+      color: #666;
+      padding-left: 1rem;
+      position: relative;
+    }
+
+    ul li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: #bbb;
+    }
+
+    .cta {
+      display: inline-block;
+      margin-top: .4rem;
+      padding: .7rem 1.8rem;
+      background: #111;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: .75rem;
+      font-weight: 400;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: background .2s;
+    }
+
+    .cta:hover { background: #333; }
+
+    .note {
+      margin-top: 3rem;
+      font-size: .75rem;
+      color: #bbb;
+    }
+
+    @keyframes up {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <p class="label">В разработке</p>
+    <h1>Дневник<br>размышлений</h1>
+    <div class="divider"></div>
+    <p>Пространство для тихих мыслей — записей, наблюдений и внутреннего диалога. Проект в процессе.</p>
+    <ul>
+      <li>Ежедневные записи с меткой времени</li>
+      <li>Теги и поиск по прошлым мыслям</li>
+      <li>Режим сосредоточенного письма</li>
+      <li>Приватно, локально — только для тебя</li>
+    </ul>
+    <a href="#" class="cta">Уведомить о запуске</a>
+    <p class="note">Репозиторий скоро появится на GitHub</p>
+  </main>
+</body>
+</html>

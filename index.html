@@ -3,128 +3,250 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Дневник размышлений</title>
+  <title>Дневник наблюдений</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; }
 
-    body {
-      background: #fff;
-      color: #111;
-      font-family: 'Inter', sans-serif;
-      font-weight: 300;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
+    :root {
+      color-scheme: light;
+      --text: #151515;
+      --muted: #6f6f6f;
+      --soft: #a8a8a8;
+      --line: #e8e8e8;
+      --paper: #ffffff;
+      --wash: #f7f7f4;
+      --accent: #315f54;
+      --accent-soft: #e8f0ed;
     }
 
-    .container {
-      max-width: 540px;
-      width: 100%;
-      opacity: 0;
-      animation: up .7s ease .1s forwards;
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--wash);
+      color: var(--text);
+      font-family: "Inter", Arial, sans-serif;
+      font-weight: 300;
+    }
+
+    .page {
+      width: min(860px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 54px 0 72px;
+    }
+
+    header {
+      display: grid;
+      gap: 16px;
+      padding-bottom: 30px;
+      border-bottom: 1px solid var(--line);
     }
 
     .label {
-      font-size: .7rem;
-      font-weight: 400;
-      letter-spacing: .2em;
+      margin: 0;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: #999;
-      margin-bottom: 2rem;
     }
 
     h1 {
-      font-size: clamp(2rem, 6vw, 3rem);
+      margin: 0;
+      max-width: 680px;
+      font-size: clamp(2.2rem, 7vw, 5rem);
       font-weight: 300;
-      line-height: 1.15;
-      letter-spacing: -.02em;
-      margin-bottom: 1.8rem;
+      line-height: 1;
+      letter-spacing: 0;
     }
 
-    .divider {
-      width: 32px;
-      height: 1px;
-      background: #111;
-      margin-bottom: 1.8rem;
-    }
-
-    p {
+    .intro {
+      max-width: 620px;
+      margin: 0;
+      color: var(--muted);
       font-size: 1rem;
       line-height: 1.75;
-      color: #555;
-      margin-bottom: 1rem;
     }
 
-    ul {
-      list-style: none;
-      margin: 1.6rem 0 2.4rem;
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 34px 0 14px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .count {
+      min-height: 1.4em;
+    }
+
+    .entries {
       display: grid;
-      gap: .5rem;
+      gap: 0;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
     }
 
-    ul li {
-      font-size: .9rem;
-      color: #666;
-      padding-left: 1rem;
-      position: relative;
-    }
-
-    ul li::before {
-      content: '—';
-      position: absolute;
-      left: 0;
-      color: #bbb;
-    }
-
-    .cta {
-      display: inline-block;
-      margin-top: .4rem;
-      padding: .7rem 1.8rem;
-      background: #111;
-      color: #fff;
-      font-family: 'Inter', sans-serif;
-      font-size: .75rem;
-      font-weight: 400;
-      letter-spacing: .15em;
-      text-transform: uppercase;
+    .entry {
+      display: grid;
+      grid-template-columns: minmax(110px, 150px) 1fr;
+      gap: 20px;
+      align-items: baseline;
+      padding: 22px 24px;
+      color: inherit;
       text-decoration: none;
-      transition: background .2s;
+      border-bottom: 1px solid var(--line);
+      transition: background 160ms ease, color 160ms ease;
     }
 
-    .cta:hover { background: #333; }
-
-    .note {
-      margin-top: 3rem;
-      font-size: .75rem;
-      color: #bbb;
+    .entry:last-child {
+      border-bottom: 0;
     }
 
-    @keyframes up {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .entry:hover,
+    .entry:focus-visible {
+      background: var(--accent-soft);
+      outline: 0;
+    }
+
+    .entry time {
+      color: var(--soft);
+      font-size: 0.84rem;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+
+    .entry strong {
+      min-width: 0;
+      font-size: 1.05rem;
+      font-weight: 400;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .empty {
+      display: none;
+      padding: 30px 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .empty.is-visible {
+      display: block;
+    }
+
+    .error {
+      display: none;
+      margin-top: 18px;
+      color: #8a3a32;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .error.is-visible {
+      display: block;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100% - 28px, 860px);
+        padding-top: 34px;
+      }
+
+      .toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .entry {
+        grid-template-columns: 1fr;
+        gap: 7px;
+        padding: 19px 18px;
+      }
     }
   </style>
 </head>
 <body>
-  <main class="container">
-    <p class="label">В разработке</p>
-    <h1>Дневник<br>размышлений</h1>
-    <div class="divider"></div>
-    <p>Пространство для тихих мыслей — записей, наблюдений и внутреннего диалога. Проект в процессе.</p>
-    <ul>
-      <li>Ежедневные записи с меткой времени</li>
-      <li>Теги и поиск по прошлым мыслям</li>
-      <li>Режим сосредоточенного письма</li>
-      <li>Приватно, локально — только для тебя</li>
-    </ul>
-    <a href="#" class="cta">Уведомить о запуске</a>
-    <p class="note">Репозиторий скоро появится на GitHub</p>
+  <main class="page">
+    <header>
+      <p class="label">Личный архив</p>
+      <h1>Дневник наблюдений</h1>
+      <p class="intro">Короткие заметки, мысли и наблюдения, отправленные через Telegram и сохраненные здесь отдельными страницами.</p>
+    </header>
+
+    <section aria-labelledby="entries-title">
+      <div class="toolbar">
+        <h2 id="entries-title" class="label">Записи</h2>
+        <div class="count" id="count"></div>
+      </div>
+
+      <div class="entries" id="entries" aria-live="polite"></div>
+      <p class="empty" id="empty">Пока записей нет. Отправь первое наблюдение Telegram-боту, и после запуска GitHub Actions оно появится здесь.</p>
+      <p class="error" id="error">Не удалось загрузить список записей. Проверь файл data/entries.json.</p>
+    </section>
   </main>
+
+  <script>
+    const entriesEl = document.querySelector("#entries");
+    const emptyEl = document.querySelector("#empty");
+    const errorEl = document.querySelector("#error");
+    const countEl = document.querySelector("#count");
+
+    const formatDate = (value) => {
+      const [year, month, day] = value.split("-").map(Number);
+      return new Intl.DateTimeFormat("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }).format(new Date(year, month - 1, day));
+    };
+
+    fetch("data/entries.json", { cache: "no-store" })
+      .then((response) => {
+        if (!response.ok) throw new Error("entries.json not found");
+        return response.json();
+      })
+      .then((entries) => {
+        const sorted = [...entries].sort((a, b) => {
+          return `${b.date} ${b.createdAt || ""}`.localeCompare(`${a.date} ${a.createdAt || ""}`);
+        });
+
+        countEl.textContent = sorted.length
+          ? `${sorted.length} ${sorted.length === 1 ? "запись" : "записей"}`
+          : "";
+
+        if (!sorted.length) {
+          emptyEl.classList.add("is-visible");
+          return;
+        }
+
+        for (const entry of sorted) {
+          const link = document.createElement("a");
+          const time = document.createElement("time");
+          const title = document.createElement("strong");
+
+          link.className = "entry";
+          link.href = entry.url;
+          time.dateTime = entry.date;
+          time.textContent = formatDate(entry.date);
+          title.textContent = entry.title;
+
+          link.append(time, title);
+          entriesEl.append(link);
+        }
+      })
+      .catch(() => {
+        errorEl.classList.add("is-visible");
+      });
+  </script>
 </body>
 </html>

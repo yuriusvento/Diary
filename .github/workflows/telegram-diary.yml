@@ -1,0 +1,46 @@
+name: Telegram Diary
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: telegram-diary
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch Telegram messages
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ALLOWED_CHAT_ID: ${{ secrets.TELEGRAM_ALLOWED_CHAT_ID }}
+          DIARY_TIME_ZONE: ${{ vars.DIARY_TIME_ZONE || 'America/Sao_Paulo' }}
+        run: node scripts/fetch-telegram.js
+
+      - name: Commit changes
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No diary changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/*.json entries/*.html
+          git commit -m "Add diary entries from Telegram"
+          git push

@@ -5,5 +5,17 @@
     "url": "entries/2026-05-31-braziliya-luchshaya-strana-dlya-paraplanerista.html",
     "createdAt": "2026-05-31T19:33:16.000Z",
     "telegramUpdateId": 952153276
+  },
+  {
+    "date": "2026-05-31",
+    "title": "Рампа Pitinga Arroyal d’Ajuda",
+    "url": "entries/2026-05-31-rampa-pitinga-arroyal-d-ajuda.html",
+    "createdAt": "2026-05-31T19:57:13.000Z",
+    "telegramUpdateId": 952153277,
+    "media": {
+      "type": "photo",
+      "url": "media/2026-05-31-rampa-pitinga-arroyal-d-ajuda.jpg",
+      "size": 328006
+    }
   }
 ]

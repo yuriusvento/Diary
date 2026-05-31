@@ -3,6 +3,7 @@ const path = require("node:path");
 
 const rootDir = path.resolve(__dirname, "..");
 const entriesDir = path.join(rootDir, "entries");
+const mediaDir = path.join(rootDir, "media");
 const dataDir = path.join(rootDir, "data");
 const entriesPath = path.join(dataDir, "entries.json");
 const statePath = path.join(dataDir, "state.json");
@@ -61,6 +62,14 @@ const splitMessage = (text) => {
   return { title, body };
 };
 
+const splitEntryText = (text, fallbackTitle) => {
+  if (!text?.trim()) {
+    return { title: fallbackTitle, body: "" };
+  }
+
+  return splitMessage(text);
+};
+
 const formatDateInTimeZone = (createdAt, timeZone) => {
   const parts = new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
@@ -74,13 +83,33 @@ const formatDateInTimeZone = (createdAt, timeZone) => {
 };
 
 const renderBody = (text) => {
+  if (!text) return "";
+
   return escapeHtml(text)
     .split(/\n{2,}/)
     .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
     .join("\n        ");
 };
 
-const renderEntryPage = ({ title, body, date, createdAt }) => {
+const renderMedia = (media) => {
+  if (!media) return "";
+
+  if (media.type === "photo") {
+    return `<figure class="media">
+          <img src="../${escapeHtml(media.url)}" alt="${escapeHtml(media.alt || "Фото наблюдения")}" loading="lazy" />
+        </figure>`;
+  }
+
+  if (media.type === "video") {
+    return `<figure class="media">
+          <video src="../${escapeHtml(media.url)}" controls preload="metadata"></video>
+        </figure>`;
+  }
+
+  return "";
+};
+
+const renderEntryPage = ({ title, body, date, createdAt, media }) => {
   const dateLabel = new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
     month: "2-digit",
@@ -155,6 +184,18 @@ const renderEntryPage = ({ title, body, date, createdAt }) => {
       border-radius: 8px;
       padding: clamp(22px, 5vw, 42px);
     }
+    .media {
+      margin: 0 0 28px;
+    }
+    .media img,
+    .media video {
+      display: block;
+      width: 100%;
+      max-height: 78vh;
+      object-fit: contain;
+      background: #111;
+      border-radius: 8px;
+    }
     p {
       margin: 0 0 1.25rem;
       color: #343434;
@@ -179,6 +220,7 @@ const renderEntryPage = ({ title, body, date, createdAt }) => {
       <time datetime="${date}">${dateLabel}</time>
       <h1>${escapeHtml(title)}</h1>
       <div class="content">
+        ${renderMedia(media)}
         ${renderBody(body)}
       </div>
     </article>
@@ -216,6 +258,64 @@ const sendMessage = async (chatId, text) => {
   }
 };
 
+const getFileInfo = async (fileId) => {
+  const url = new URL(`https://api.telegram.org/bot${token}/getFile`);
+  url.searchParams.set("file_id", fileId);
+
+  const response = await fetch(url);
+  const payload = await response.json();
+
+  if (!payload.ok) {
+    throw new Error(payload.description || "Telegram getFile request failed");
+  }
+
+  return payload.result;
+};
+
+const extensionFromPath = (filePath, fallback) => {
+  const extension = path.extname(filePath || "").toLowerCase();
+  return extension || fallback;
+};
+
+const detectMedia = (message) => {
+  if (message.photo?.length) {
+    const photo = message.photo.at(-1);
+    return {
+      type: "photo",
+      fileId: photo.file_id,
+      fallbackExtension: ".jpg",
+      fallbackTitle: "Фото"
+    };
+  }
+
+  if (message.video) {
+    return {
+      type: "video",
+      fileId: message.video.file_id,
+      fallbackExtension: ".mp4",
+      fallbackTitle: "Видео"
+    };
+  }
+
+  return null;
+};
+
+const downloadTelegramFile = async (fileInfo, destinationPath) => {
+  const response = await fetch(`https://api.telegram.org/file/bot${token}/${fileInfo.file_path}`);
+
+  if (!response.ok) {
+    throw new Error(`Could not download Telegram file: ${response.status}`);
+  }
+
+  const bytes = Buffer.from(await response.arrayBuffer());
+  fs.writeFileSync(destinationPath, bytes);
+
+  return {
+    filePath: fileInfo.file_path,
+    size: bytes.length
+  };
+};
+
 const ensureUniqueFileName = (date, slug) => {
   let fileName = `${date}-${slug}.html`;
   let index = 2;
@@ -228,8 +328,21 @@ const ensureUniqueFileName = (date, slug) => {
   return fileName;
 };
 
+const ensureUniqueMediaFileName = (baseName, extension) => {
+  let fileName = `${baseName}${extension}`;
+  let index = 2;
+
+  while (fs.existsSync(path.join(mediaDir, fileName))) {
+    fileName = `${baseName}-${index}${extension}`;
+    index += 1;
+  }
+
+  return fileName;
+};
+
 const main = async () => {
   fs.mkdirSync(entriesDir, { recursive: true });
+  fs.mkdirSync(mediaDir, { recursive: true });
   fs.mkdirSync(dataDir, { recursive: true });
 
   const state = readJson(statePath, { lastUpdateId: 0 });
@@ -243,10 +356,11 @@ const main = async () => {
     lastUpdateId = Math.max(lastUpdateId, update.update_id);
 
     const message = update.message;
-    const text = message?.text?.trim();
+    const text = (message?.text || message?.caption || "").trim();
+    const mediaInfo = detectMedia(message || {});
     const chatId = message?.chat?.id;
 
-    if (!text) continue;
+    if (!text && !mediaInfo) continue;
 
     if (text === "/id") {
       await sendMessage(chatId, `Твой chat ID: ${chatId}`);
@@ -267,13 +381,32 @@ const main = async () => {
 
     const createdAt = new Date((message.date || Math.floor(Date.now() / 1000)) * 1000).toISOString();
     const date = formatDateInTimeZone(createdAt, process.env.DIARY_TIME_ZONE || "America/Sao_Paulo");
-    const { title, body } = splitMessage(text);
-    const fileName = ensureUniqueFileName(date, slugify(title));
+    const { title, body } = splitEntryText(text, mediaInfo?.fallbackTitle || "Наблюдение");
+    const slug = slugify(title);
+    const fileName = ensureUniqueFileName(date, slug);
     const url = `entries/${fileName}`;
+    let media = null;
+
+    if (mediaInfo) {
+      const fileInfo = await getFileInfo(mediaInfo.fileId);
+      const extension = extensionFromPath(fileInfo.file_path, mediaInfo.fallbackExtension);
+      const mediaFileName = ensureUniqueMediaFileName(`${date}-${slug}`, extension);
+      const mediaPath = path.join(mediaDir, mediaFileName);
+
+      const downloaded = await downloadTelegramFile(fileInfo, mediaPath);
+
+      media = {
+        type: mediaInfo.type,
+        url: `media/${mediaFileName}`,
+        fileName: mediaFileName,
+        size: downloaded.size,
+        alt: title
+      };
+    }
 
     fs.writeFileSync(
       path.join(entriesDir, fileName),
-      renderEntryPage({ title, body, date, createdAt })
+      renderEntryPage({ title, body, date, createdAt, media })
     );
 
     entries.push({
@@ -281,7 +414,12 @@ const main = async () => {
       title,
       url,
       createdAt,
-      telegramUpdateId: update.update_id
+      telegramUpdateId: update.update_id,
+      media: media ? {
+        type: media.type,
+        url: media.url,
+        size: media.size
+      } : null
     });
 
     createdCount += 1;

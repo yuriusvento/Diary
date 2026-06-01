@@ -29,5 +29,17 @@
       "url": "media/2026-05-31-tretiy-post.jpg",
       "size": 780172
     }
+  },
+  {
+    "date": "2026-06-01",
+    "title": "Caraiva - романтический городок",
+    "url": "entries/2026-06-01-caraiva-romanticheskiy-gorodok.html",
+    "createdAt": "2026-06-01T21:09:03.000Z",
+    "telegramUpdateId": 952153279,
+    "media": {
+      "type": "photo",
+      "url": "media/2026-06-01-caraiva-romanticheskiy-gorodok.jpg",
+      "size": 202574
+    }
   }
 ]

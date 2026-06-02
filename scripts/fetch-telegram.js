@@ -264,6 +264,26 @@ const sendMessage = async (chatId, text) => {
   }
 };
 
+const setBotCommands = async () => {
+  const commands = [
+    { command: "help", description: "Как публиковать, редактировать и удалять записи" },
+    { command: "list", description: "Показать последние 10 записей" },
+    { command: "edit", description: "Редактировать запись: /edit latest" },
+    { command: "delete", description: "Удалить запись: /delete latest" },
+    { command: "id", description: "Показать Telegram chat ID" }
+  ];
+
+  const response = await fetch(`https://api.telegram.org/bot${token}/setMyCommands`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ commands })
+  });
+
+  if (!response.ok) {
+    console.warn("Could not update Telegram bot commands");
+  }
+};
+
 const getFileInfo = async (fileId) => {
   const url = new URL(`https://api.telegram.org/bot${token}/getFile`);
   url.searchParams.set("file_id", fileId);
@@ -406,10 +426,18 @@ const listEntriesMessage = (entries) => {
 
 const helpMessage = () => {
   return [
-    "Пришли наблюдение: первая строка станет названием, остальной текст станет записью.",
+    "Как вести дневник:",
+    "",
+    "Обычная запись:",
+    "Название наблюдения",
+    "",
+    "Текст наблюдения",
+    "",
+    "Фото или видео:",
+    "отправь файл с подписью в таком же формате.",
     "",
     "Команды:",
-    "/list - последние 10 записей",
+    "/list - последние 10 записей с номерами и id",
     "/delete latest - удалить последнюю запись",
     "/delete 1 - удалить запись номер 1 из /list",
     "/delete <id> - удалить запись по id",
@@ -426,6 +454,8 @@ const main = async () => {
   fs.mkdirSync(entriesDir, { recursive: true });
   fs.mkdirSync(mediaDir, { recursive: true });
   fs.mkdirSync(dataDir, { recursive: true });
+
+  await setBotCommands();
 
   const state = readJson(statePath, { lastUpdateId: 0 });
   const entries = readJson(entriesPath, []);

@@ -70,6 +70,12 @@ const splitEntryText = (text, fallbackTitle) => {
   return splitMessage(text);
 };
 
+const getEntryId = (entry) => {
+  if (entry.id) return String(entry.id);
+  if (entry.telegramUpdateId) return String(entry.telegramUpdateId);
+  return path.basename(entry.url || "", ".html");
+};
+
 const formatDateInTimeZone = (createdAt, timeZone) => {
   const parts = new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
@@ -340,6 +346,82 @@ const ensureUniqueMediaFileName = (baseName, extension) => {
   return fileName;
 };
 
+const sortedEntries = (entries) => {
+  return [...entries].sort((a, b) => {
+    return `${b.createdAt || b.date || ""}`.localeCompare(`${a.createdAt || a.date || ""}`);
+  });
+};
+
+const findEntryByReference = (entries, reference) => {
+  const value = String(reference || "").trim().toLowerCase();
+  const recent = sortedEntries(entries);
+
+  if (!value || value === "latest" || value === "last" || value === "последний") {
+    return recent[0] ? { entry: recent[0], index: entries.indexOf(recent[0]) } : null;
+  }
+
+  const directIndex = entries.findIndex((entry) => getEntryId(entry).toLowerCase() === value);
+  if (directIndex !== -1) {
+    return { entry: entries[directIndex], index: directIndex };
+  }
+
+  const listNumber = Number(value);
+  if (Number.isInteger(listNumber) && listNumber >= 1 && listNumber <= recent.length) {
+    const entry = recent[listNumber - 1];
+    return { entry, index: entries.indexOf(entry) };
+  }
+
+  return null;
+};
+
+const deleteEntryFiles = (entry, remainingEntries) => {
+  const entryFile = path.join(rootDir, entry.url || "");
+  if (entry.url && fs.existsSync(entryFile)) {
+    fs.unlinkSync(entryFile);
+  }
+
+  const mediaUrl = entry.media?.url;
+  const mediaStillUsed = mediaUrl && remainingEntries.some((item) => item.media?.url === mediaUrl);
+
+  if (mediaUrl && !mediaStillUsed) {
+    const mediaFile = path.join(rootDir, mediaUrl);
+    if (fs.existsSync(mediaFile)) {
+      fs.unlinkSync(mediaFile);
+    }
+  }
+};
+
+const listEntriesMessage = (entries) => {
+  const recent = sortedEntries(entries).slice(0, 10);
+
+  if (!recent.length) {
+    return "Записей пока нет.";
+  }
+
+  return recent.map((entry, index) => {
+    const kind = entry.media?.type === "photo" ? "фото" : entry.media?.type === "video" ? "видео" : "текст";
+    return `${index + 1}. ${getEntryId(entry)} - ${entry.title} (${kind})`;
+  }).join("\n");
+};
+
+const helpMessage = () => {
+  return [
+    "Пришли наблюдение: первая строка станет названием, остальной текст станет записью.",
+    "",
+    "Команды:",
+    "/list - последние 10 записей",
+    "/delete latest - удалить последнюю запись",
+    "/delete 1 - удалить запись номер 1 из /list",
+    "/delete <id> - удалить запись по id",
+    "/edit latest",
+    "Новое название",
+    "",
+    "Новый текст - отредактировать последнюю запись",
+    "/edit <id> - отредактировать запись по id",
+    "/id - показать твой chat ID"
+  ].join("\n");
+};
+
 const main = async () => {
   fs.mkdirSync(entriesDir, { recursive: true });
   fs.mkdirSync(mediaDir, { recursive: true });
@@ -350,7 +432,7 @@ const main = async () => {
   const updates = await getUpdates(Number(state.lastUpdateId || 0) + 1);
 
   let lastUpdateId = Number(state.lastUpdateId || 0);
-  let createdCount = 0;
+  let changeCount = 0;
 
   for (const update of updates) {
     lastUpdateId = Math.max(lastUpdateId, update.update_id);
@@ -367,17 +449,80 @@ const main = async () => {
       continue;
     }
 
-    if (text === "/start") {
-      await sendMessage(chatId, "Пришли наблюдение: первая строка станет названием, остальной текст станет записью.");
+    if (text === "/start" || text === "/help") {
+      await sendMessage(chatId, helpMessage());
       continue;
     }
-
-    if (text.startsWith("/")) continue;
 
     if (allowedChatId && String(chatId) !== String(allowedChatId)) {
       console.log(`Skipping message from chat ${chatId}`);
       continue;
     }
+
+    if (text === "/list") {
+      await sendMessage(chatId, listEntriesMessage(entries));
+      continue;
+    }
+
+    if (text.startsWith("/delete")) {
+      const reference = text.replace(/^\/delete(@\w+)?/i, "").trim() || "latest";
+      const match = findEntryByReference(entries, reference);
+
+      if (!match) {
+        await sendMessage(chatId, "Не нашел запись для удаления. Напиши /list и используй номер или id.");
+        continue;
+      }
+
+      const [deleted] = entries.splice(match.index, 1);
+      deleteEntryFiles(deleted, entries);
+      changeCount += 1;
+      await sendMessage(chatId, `Запись удалена: ${deleted.title}`);
+      continue;
+    }
+
+    if (text.startsWith("/edit")) {
+      const editText = text.replace(/^\/edit(@\w+)?/i, "").trim();
+      const lines = editText.split("\n");
+      const reference = lines.shift()?.trim() || "latest";
+      const nextText = lines.join("\n").trim();
+      const match = findEntryByReference(entries, reference);
+
+      if (!match) {
+        await sendMessage(chatId, "Не нашел запись для редактирования. Напиши /list и используй номер или id.");
+        continue;
+      }
+
+      if (!nextText) {
+        await sendMessage(chatId, "Для редактирования напиши так:\n/edit latest\nНовое название\n\nНовый текст");
+        continue;
+      }
+
+      const { title, body } = splitMessage(nextText);
+      const updated = {
+        ...match.entry,
+        title,
+        body,
+        editedAt: new Date().toISOString()
+      };
+
+      fs.writeFileSync(
+        path.join(rootDir, updated.url),
+        renderEntryPage({
+          title: updated.title,
+          body: updated.body,
+          date: updated.date,
+          createdAt: updated.createdAt,
+          media: updated.media ? { ...updated.media, alt: updated.title } : null
+        })
+      );
+
+      entries[match.index] = updated;
+      changeCount += 1;
+      await sendMessage(chatId, `Запись обновлена: ${updated.title}`);
+      continue;
+    }
+
+    if (text.startsWith("/")) continue;
 
     const createdAt = new Date((message.date || Math.floor(Date.now() / 1000)) * 1000).toISOString();
     const date = formatDateInTimeZone(createdAt, process.env.DIARY_TIME_ZONE || "America/Sao_Paulo");
@@ -410,8 +555,10 @@ const main = async () => {
     );
 
     entries.push({
+      id: String(update.update_id),
       date,
       title,
+      body,
       url,
       createdAt,
       telegramUpdateId: update.update_id,
@@ -422,14 +569,14 @@ const main = async () => {
       } : null
     });
 
-    createdCount += 1;
+    changeCount += 1;
     await sendMessage(chatId, `Запись опубликована: ${title}`);
   }
 
   writeJson(entriesPath, entries);
   writeJson(statePath, { lastUpdateId });
 
-  console.log(`Created ${createdCount} entr${createdCount === 1 ? "y" : "ies"}.`);
+  console.log(`Processed ${changeCount} diary change${changeCount === 1 ? "" : "s"}.`);
 };
 
 main().catch((error) => {

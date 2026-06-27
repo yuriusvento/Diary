@@ -41,5 +41,29 @@
       "url": "media/2026-06-01-caraiva-romanticheskiy-gorodok.jpg",
       "size": 202574
     }
+  },
+  {
+    "id": "952153290",
+    "date": "2026-06-27",
+    "title": "Погода на завтра , 28 июня. Арроял д’Ажуда",
+    "body": "Теоретически можно пробовать стартовать в 12 00. Ветер может быть сильный, но лучше всего быть на старте в 12. Вечерний бриз может принести дождь.",
+    "url": "entries/2026-06-27-pogoda-na-zavtra-28-iyunya-arroyal-d-azhuda.html",
+    "createdAt": "2026-06-27T22:47:45.000Z",
+    "telegramUpdateId": 952153290,
+    "media": {
+      "type": "photo",
+      "url": "media/2026-06-27-pogoda-na-zavtra-28-iyunya-arroyal-d-azhuda.jpg",
+      "size": 175027
+    }
+  },
+  {
+    "id": "952153291",
+    "date": "2026-06-27",
+    "title": "https://yuriusvento.github.io/Diary/",
+    "body": "https://yuriusvento.github.io/Diary/",
+    "url": "entries/2026-06-27-https-yuriusvento-github-io-diary.html",
+    "createdAt": "2026-06-27T22:59:06.000Z",
+    "telegramUpdateId": 952153291,
+    "media": null
   }
 ]

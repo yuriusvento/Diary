@@ -222,6 +222,14 @@ section h2 {
   object-position: center;
 }
 
+.story-block--people img {
+  object-position: center;
+}
+
+.story-block--quiet .story-block__copy h2 {
+  max-width: 10ch;
+}
+
 .feeling-list {
   padding: 42px 22px 30px;
   background: var(--paper);

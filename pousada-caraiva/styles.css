@@ -385,6 +385,32 @@ section h2 {
   min-height: 52px;
 }
 
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.social-links a {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(6 99 133 / 0.2);
+  border-radius: 50%;
+  background: rgb(255 254 248 / 0.78);
+  color: var(--blue-deep);
+  text-decoration: none;
+}
+
+.social-links svg {
+  width: 23px;
+  height: 23px;
+  fill: currentColor;
+}
+
 @media (min-width: 481px) {
   body {
     padding: 24px 0;

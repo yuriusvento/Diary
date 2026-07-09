@@ -67,8 +67,8 @@ a {
 .hero__shade {
   z-index: -1;
   background:
-    linear-gradient(180deg, rgb(2 34 49 / 0.42), transparent 32%),
-    linear-gradient(0deg, rgb(1 21 30 / 0.86), rgb(1 21 30 / 0.2) 58%, transparent);
+    linear-gradient(180deg, rgb(2 34 49 / 0.32), transparent 30%),
+    linear-gradient(0deg, rgb(1 21 30 / 0.72), rgb(1 21 30 / 0.12) 54%, transparent);
 }
 
 .topbar {
@@ -113,7 +113,7 @@ a {
 }
 
 .hero__copy {
-  padding: 0 22px 42px;
+  padding: 0 22px 34px;
 }
 
 .eyebrow,
@@ -132,16 +132,15 @@ section h2 {
 }
 
 .hero h1 {
-  max-width: 11ch;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(3.4rem, 17vw, 5.35rem);
-  line-height: 0.87;
-  font-weight: 500;
+  max-width: 12ch;
+  font-size: clamp(2.45rem, 11vw, 3.55rem);
+  line-height: 0.96;
+  font-weight: 850;
 }
 
 .hero__copy p:last-child {
-  max-width: 29ch;
-  margin: 20px 0 0;
+  max-width: 28ch;
+  margin: 16px 0 0;
   color: rgb(255 255 255 / 0.86);
   font-size: 1.04rem;
   line-height: 1.45;
@@ -161,10 +160,9 @@ section h2 {
 .detox h2,
 .ritual h2,
 .final-cta h2 {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2.05rem, 9vw, 3.05rem);
-  line-height: 0.98;
-  font-weight: 500;
+  font-size: clamp(1.8rem, 7.5vw, 2.55rem);
+  line-height: 1.04;
+  font-weight: 850;
 }
 
 .photo-story {
@@ -213,9 +211,10 @@ section h2 {
 }
 
 .story-block__copy h2 {
-  max-width: 11ch;
-  font-size: clamp(2.8rem, 13vw, 4rem);
-  line-height: 0.92;
+  max-width: 13ch;
+  font-size: clamp(2.1rem, 9.5vw, 3.05rem);
+  line-height: 0.98;
+  font-weight: 850;
 }
 
 .story-block--quiet img {
